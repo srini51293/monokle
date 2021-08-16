@@ -245,7 +245,7 @@ const Monaco = (props: {editorHeight: string}) => {
     return () => {
       clearCodeIntel();
     };
-  }, [code, selectedResourceId, resourceMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [code, selectedResourceId, resourceMap]);
 
   useEffect(() => {
     let resourceSchema;
@@ -268,7 +268,7 @@ const Monaco = (props: {editorHeight: string}) => {
         schemas: [
           {
             uri: 'http://monokle/k8s.json', // id of the first schema
-            fileMatch: ['*'], // associate with our model
+            fileMatch: ['**'], // associate with our model
             schema: resourceSchema || {},
           },
         ],
@@ -280,14 +280,14 @@ const Monaco = (props: {editorHeight: string}) => {
       const newCompletionDisposable = codeIntel.applyAutocomplete(resourceMap);
       completionDisposableRef.current = newCompletionDisposable;
     }
-  }, [selectedResourceId, resourceMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedResourceId, resourceMap, editor]);
 
   useEffect(() => {
     if (editor) {
       editor.revealLineNearTop(1);
       editor.setSelection(new monaco.Selection(0, 0, 0, 0));
     }
-  }, [editor, code]);
+  }, [editor, selectedResourceId]);
 
   return (
     <>
