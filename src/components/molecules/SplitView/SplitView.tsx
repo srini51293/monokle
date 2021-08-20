@@ -3,10 +3,12 @@ import styled from 'styled-components';
 import {AppBorders} from '@styles/Borders';
 
 const MIN_WIDTH = 150;
+const MIN_HEIGHT = 50;
 const SEPARATOR_WIDTH = 5; // width including hitbox
 
 export type SplitViewProps = {
   contentWidth: number;
+  contentHeight: number;
   left: ReactElement;
   hideLeft: boolean;
   nav: ReactElement;
@@ -25,6 +27,7 @@ const StyledSplitView = styled.div`
 
 export type DividerProps = {
   hide: boolean;
+  vertical?: boolean;
 };
 const StyledDivider = styled.div`
   width: 0px;
@@ -32,8 +35,14 @@ const StyledDivider = styled.div`
   margin: 1px;
   border-left: ${AppBorders.pageDivider};
 `;
+const StyledVerticalDivider = styled.div`
+  width: 100%;
+  height: 0px;
+  margin: 1px;
+  border-bottom: ${AppBorders.pageDivider};
+`;
 const StyledDividerHitBox = styled.div.attrs((props: DividerProps) => props)`
-  cursor: col-resize;
+  cursor: ${props => (props.vertical ? 'row-resize' : 'col-resize;')};
   align-self: stretch;
   display: ${props => (props.hide ? 'none' : 'flex')};
   align-items: center;
@@ -44,15 +53,32 @@ const StyledPaneDiv = styled.div`
   height: 100%;
 `;
 
-const Pane: FunctionComponent<{
+const StyledVerticalPaneContainer = styled.div`
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+`;
+
+const HorizontalPane: FunctionComponent<{
   width: number;
   hide: boolean;
 }> = ({children, width, hide}) => {
   return <StyledPaneDiv style={{display: hide ? 'none' : 'inline-block', width}}>{children}</StyledPaneDiv>;
 };
 
+const VerticalPane: FunctionComponent<{
+  width: number;
+  height: number;
+  hide: boolean;
+}> = ({children, width, height, hide}) => {
+  return <StyledPaneDiv style={{display: hide ? 'none' : 'inline-block', width, height}}>{children}</StyledPaneDiv>;
+};
+
 const SplitView: FunctionComponent<SplitViewProps> = ({
   contentWidth,
+  contentHeight,
   left,
   hideLeft,
   nav,
@@ -65,13 +91,19 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
   if (viewWidth !== contentWidth) {
     setViewWidth(contentWidth);
   }
+  const [viewHeight, setViewHeight] = useState<number>(contentHeight);
+  if (viewHeight !== contentHeight) {
+    setViewHeight(contentHeight);
+  }
 
   // panes enabled
   const [leftHidden, setLeftHidden] = useState<boolean>(hideLeft);
   const [rightHidden, setRightHidden] = useState<boolean>(hideRight);
+  const [navDockHidden, setNavDockHidden] = useState<boolean>(false);
 
   const numSeparatorsActive = 1 + (leftHidden ? 0 : 1) + (rightHidden ? 0 : 1);
   const splitPaneWidth = viewWidth - numSeparatorsActive * SEPARATOR_WIDTH;
+  const splitPaneHeight = viewHeight - 2; // subtract pane dividers height
 
   // pane widths
   const [leftWidth, setLeftWidth] = useState<number>(0.3333);
@@ -79,7 +111,11 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
   const [editWidth, setEditWidth] = useState<number>(0.3333);
   const [rightWidth, setRightWidth] = useState<number>(0);
 
-  // detect pane changes
+  // pane heights
+  const [navHeight, setNavHeight] = useState<number>(0.95);
+  const [navDockHeight, setNavDockHeight] = useState<number>(0.05);
+
+  // detect horizontal pane changes
   if (leftHidden !== hideLeft || rightHidden !== hideRight) {
     setLeftHidden(hideLeft);
     setRightHidden(hideRight);
@@ -111,9 +147,11 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
   const [separatorLeftNavXPosition, setSeparatorLeftNavXPosition] = useState<number>(splitPaneWidth * 0.25);
   const [separatorNavEditXPosition, setSeparatorNavEditXPosition] = useState<number>(splitPaneWidth * 0.5);
   const [separatorEditRightXPosition, setSeparatorEditRightXPosition] = useState<number>(splitPaneWidth * 0.75);
+  const [separatorNavDockYPosition, setSeparatorNavDockYPosition] = useState<number>(splitPaneHeight * 0.95);
   const [draggingLeftNav, setDraggingLeftNav] = useState(false);
   const [draggingNavEdit, setDraggingNavEdit] = useState(false);
   const [draggingEditRight, setDraggingEditRight] = useState(false);
+  const [draggingNavDock, setDraggingNavDock] = useState(false);
 
   const onMouseDownLeftNav = (evt: MouseEvent<HTMLElement>): any => {
     setSeparatorLeftNavXPosition(evt.clientX);
@@ -128,6 +166,11 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
   const onMouseDownEditRight = (evt: MouseEvent<HTMLElement>): any => {
     setSeparatorEditRightXPosition(evt.clientX);
     setDraggingEditRight(true);
+  };
+
+  const onMouseDownNavDock = (evt: MouseEvent<HTMLElement>): any => {
+    setSeparatorNavDockYPosition(evt.clientY);
+    setDraggingNavDock(true);
   };
 
   const onTouchStartLeftNav = (evt: TouchEvent<HTMLElement>): any => {
@@ -145,22 +188,30 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
     setDraggingEditRight(true);
   };
 
+  const onTouchStartNavDock = (evt: TouchEvent<HTMLElement>): any => {
+    setSeparatorNavDockYPosition(evt.touches[0].clientY);
+    setDraggingNavDock(true);
+  };
+
   const onMouseMove = (evt: MouseEvent<HTMLElement>): any => {
     evt.preventDefault();
-    onMove(evt.clientX);
+    onMoveX(evt.clientX);
+    onMoveY(evt.clientY);
   };
 
   const onTouchMove = (evt: TouchEvent<HTMLElement>): any => {
-    onMove(evt.touches[0].clientX);
+    onMoveX(evt.touches[0].clientX);
+    onMoveY(evt.touches[0].clientY);
   };
 
   const onMouseUp = () => {
     setDraggingLeftNav(false);
     setDraggingNavEdit(false);
     setDraggingEditRight(false);
+    setDraggingNavDock(false);
   };
 
-  const onMove = (clientX: number) => {
+  const onMoveX = (clientX: number) => {
     if (draggingLeftNav && leftWidth && navWidth && separatorLeftNavXPosition) {
       calcPaneWidth(
         leftWidth,
@@ -196,6 +247,20 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
     }
   };
 
+  const onMoveY = (clientY: number) => {
+    if (draggingNavDock && navHeight && navDockHeight && separatorNavDockYPosition) {
+      calcPaneHeight(
+        navHeight,
+        navDockHeight,
+        clientY,
+        separatorNavDockYPosition,
+        setSeparatorNavDockYPosition,
+        setNavHeight,
+        setNavDockHeight
+      );
+    }
+  };
+
   const calcPaneWidth = (
     paneWidthA: number,
     paneWidthB: number,
@@ -227,6 +292,37 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
     setWidthB(newPixelWidthB / viewWidth);
   };
 
+  const calcPaneHeight = (
+    paneHeightA: number,
+    paneHeightB: number,
+    clientY: number,
+    separatorY: number,
+    setSepY: Function,
+    setHeightA: Function,
+    setHeightB: Function
+  ): void => {
+    const combinedPixelHeight = Math.floor(paneHeightA * viewHeight + paneHeightB * viewHeight);
+    const newPixelHeightA = Math.floor(paneHeightA * viewHeight + clientY - separatorY);
+    const newPixelHeightB = Math.floor(combinedPixelHeight - newPixelHeightA);
+
+    setSepY(clientY);
+
+    // if trying to resize under minimum size
+    if (newPixelHeightA < MIN_HEIGHT) {
+      setHeightA(MIN_HEIGHT / viewHeight);
+      setHeightB((combinedPixelHeight - MIN_HEIGHT) / viewHeight);
+      return;
+    }
+    if (newPixelHeightB < MIN_HEIGHT) {
+      setHeightB(MIN_HEIGHT / viewHeight);
+      setHeightA((combinedPixelHeight - MIN_HEIGHT) / viewHeight);
+      return;
+    }
+
+    setHeightA(newPixelHeightA / viewHeight);
+    setHeightB(newPixelHeightB / viewHeight);
+  };
+
   useLayoutEffect(() => {
     // @ts-expect-error : dom event listener doesn't match React.*Event
     document.addEventListener('mousemove', onMouseMove);
@@ -245,9 +341,9 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
 
   return (
     <StyledSplitView>
-      <Pane width={leftWidth * viewWidth} hide={leftHidden}>
+      <HorizontalPane width={leftWidth * viewWidth} hide={leftHidden}>
         {left}
-      </Pane>
+      </HorizontalPane>
 
       <StyledDividerHitBox
         hide={leftHidden}
@@ -258,9 +354,27 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
         <StyledDivider />
       </StyledDividerHitBox>
 
-      <Pane width={navWidth * viewWidth} hide={false}>
-        {nav}
-      </Pane>
+      <HorizontalPane width={navWidth * viewWidth} hide={false}>
+        <StyledVerticalPaneContainer>
+          <VerticalPane height={navHeight * splitPaneHeight} width={navWidth * viewWidth} hide={false}>
+            {nav}
+          </VerticalPane>
+
+          <StyledDividerHitBox
+            vertical
+            hide={navDockHidden}
+            onMouseDown={onMouseDownNavDock}
+            onTouchStart={onTouchStartNavDock}
+            onTouchEnd={onMouseUp}
+          >
+            <StyledVerticalDivider />
+          </StyledDividerHitBox>
+
+          <VerticalPane height={navDockHeight * splitPaneHeight} width={navWidth * viewWidth} hide={navDockHidden}>
+            <div style={{height: '100%', width: '100%', border: '2px dashed red'}} />
+          </VerticalPane>
+        </StyledVerticalPaneContainer>
+      </HorizontalPane>
 
       <StyledDividerHitBox
         hide={false}
@@ -271,9 +385,9 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
         <StyledDivider />
       </StyledDividerHitBox>
 
-      <Pane width={editWidth * viewWidth} hide={false}>
+      <HorizontalPane width={editWidth * viewWidth} hide={false}>
         {editor}
-      </Pane>
+      </HorizontalPane>
 
       <StyledDividerHitBox
         hide={rightHidden}
@@ -284,9 +398,9 @@ const SplitView: FunctionComponent<SplitViewProps> = ({
         <StyledDivider />
       </StyledDividerHitBox>
 
-      <Pane width={rightWidth * viewWidth} hide={hideRight}>
+      <HorizontalPane width={rightWidth * viewWidth} hide={hideRight}>
         {right}
-      </Pane>
+      </HorizontalPane>
     </StyledSplitView>
   );
 };

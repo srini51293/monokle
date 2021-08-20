@@ -1,17 +1,13 @@
 import React from 'react';
 import {Collapse} from 'antd';
-
 import styled from 'styled-components';
 
 import {K8sResource} from '@models/k8sresource';
 import {NavigatorSubSection, NavigatorSection} from '@models/navigator';
 import {hasIncomingRefs, hasOutgoingRefs, hasUnsatisfiedRefs} from '@redux/services/resourceRefs';
-
 import Colors from '@styles/Colors';
-
 import NavigatorResourceRow from '@molecules/NavigatorResourceRow';
 import SubsectionHeader from './SubsectionHeader';
-
 import SectionCol from './SectionCol';
 import SectionRow from './SectionRow';
 
@@ -34,6 +30,7 @@ const StyledCollapsePanel = styled(Collapse.Panel)`
 `;
 
 const Section = (props: {
+  navigatorHeight: number | undefined;
   expandedSubsections: string[];
   onSubsectionExpand: (sectionName: string, subsectionName: string) => void;
   onSubsectionCollapse: (sectionName: string, subsectionName: string) => void;
@@ -44,6 +41,7 @@ const Section = (props: {
   selectResource: (resourceId: string) => void;
 }) => {
   const {
+    navigatorHeight,
     expandedSubsections,
     onSubsectionExpand,
     onSubsectionCollapse,
@@ -72,7 +70,9 @@ const Section = (props: {
                 header={
                   <SubsectionHeader
                     isExpanded={isSubsectionExpanded(subsection.name)}
-                    isHighlighted={!isSubsectionExpanded(subsection.name) && visibleResources.some(r => r.isHighlighted)}
+                    isHighlighted={
+                      !isSubsectionExpanded(subsection.name) && visibleResources.some(r => r.isHighlighted)
+                    }
                     isSelected={!isSubsectionExpanded(subsection.name) && visibleResources.some(r => r.isSelected)}
                     onExpand={() => onSubsectionExpand(section.name, subsection.name)}
                     onCollapse={() => onSubsectionCollapse(section.name, subsection.name)}
@@ -84,6 +84,7 @@ const Section = (props: {
                 <SectionCol key={subsection.name}>
                   {visibleResources.map(resource => (
                     <NavigatorResourceRow
+                      navigatorHeight={navigatorHeight}
                       key={resource.id}
                       rowKey={resource.id}
                       label={resource.name}

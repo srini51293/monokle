@@ -1,19 +1,19 @@
-import React, {useState, useContext, useEffect} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {Row, Skeleton} from 'antd';
 import styled from 'styled-components';
 import {useSelector} from 'react-redux';
-import {isInClusterModeSelector, helmChartsSelector, helmValuesSelector, kustomizationsSelector} from '@redux/selectors';
 
+import {
+  isInClusterModeSelector,
+  helmChartsSelector,
+  helmValuesSelector,
+  kustomizationsSelector,
+} from '@redux/selectors';
 import {HelmValuesFile} from '@models/helm';
 import Colors, {BackgroundColors} from '@styles/Colors';
 import {useAppSelector} from '@redux/hooks';
 import {MonoPaneTitle, MonoPaneTitleCol, PaneContainer, MonoSectionTitle} from '@atoms';
 import {MinusSquareOutlined, PlusSquareOutlined} from '@ant-design/icons';
-
-import {NAVIGATOR_HEIGHT_OFFSET} from '@constants/constants';
-
-import AppContext from '@src/AppContext';
-
 import HelmChartsSection from './components/HelmChartsSection';
 import KustomizationsSection from './components/KustomizationsSection';
 import ResourcesSection from './components/ResourcesSection';
@@ -120,9 +120,6 @@ const SectionHeader = (props: {
 };
 
 const NavigatorPane = () => {
-  const {windowSize} = useContext(AppContext);
-  const windowHeight = windowSize.height;
-  const navigatorHeight = windowHeight - NAVIGATOR_HEIGHT_OFFSET;
   const previewLoader = useAppSelector(state => state.main.previewLoader);
   const uiState = useAppSelector(state => state.ui);
   const selectedResourceId = useAppSelector(state => state.main.selectedResourceId);
@@ -130,6 +127,23 @@ const NavigatorPane = () => {
   const helmValues = useSelector(helmValuesSelector);
   const kustomizations = useSelector(kustomizationsSelector);
   const isInClusterMode = useSelector(isInClusterModeSelector);
+
+  const navPaneContentRef = useRef(null);
+  const titleHeight = 40;
+
+  let navigatorHeight: number | undefined = navPaneContentRef.current
+    ? // @ts-expect-error:
+      navPaneContentRef.current.offsetHeight
+    : undefined;
+
+  useEffect(() => {
+    // The 'current' property contains info of the reference:
+    // align, title, ... , width, height, etc.
+    if (navPaneContentRef.current) {
+      // @ts-expect-error:
+      navigatorHeight = navPaneContentRef.current.offsetHeight;
+    }
+  }, [navPaneContentRef, navPaneContentRef.current]);
 
   const [expandedSections, setExpandedSections] = useState<string[]>(['kustomizations', 'helmcharts']);
 
@@ -153,6 +167,8 @@ const NavigatorPane = () => {
     }
   }, [selectedResourceId]);
 
+  console.log('navigatorHeight', navigatorHeight);
+
   return (
     <>
       <TitleRow>
@@ -164,60 +180,68 @@ const NavigatorPane = () => {
           </MonoPaneTitle>
         </MonoPaneTitleCol>
       </TitleRow>
-      <NavigatorPaneContainer
-        style={{
-          height: windowHeight && windowHeight > NAVIGATOR_HEIGHT_OFFSET ? navigatorHeight : '100%',
-        }}
-      >
-        {uiState.isFolderLoading ? (
-          <StyledSkeleton active />
-        ) : (
-          <StyledCollapse collapsible="disabled" ghost activeKey={expandedSections}>
-            {!isInClusterMode && !previewLoader.isLoading && Object.values(helmCharts).length > 0 && (
-              <StyledCollapsePanel
-                key="helmcharts"
-                showArrow={false}
-                header={
-                  <SectionHeader
-                    title="Helm Charts"
-                    isExpanded={expandedSections.indexOf('helmcharts') !== -1}
-                    onExpand={() => expandSection('helmcharts')}
-                    onCollapse={() => collapseSection('helmcharts')}
-                    isSelected={
-                      !isSectionExpanded('helmcharts') &&
-                      Object.values(helmCharts).some(h =>
-                        h.valueFileIds.map(v => helmValues[v]).some((valuesFile: HelmValuesFile) => valuesFile.isSelected)
-                      )
-                    }
-                  />
-                }
-              >
-                <HelmChartsSection helmCharts={helmCharts} />
-              </StyledCollapsePanel>
-            )}
-            {!isInClusterMode && !previewLoader.isLoading && kustomizations.length > 0 && (
-              <StyledCollapsePanel
-                key="kustomizations"
-                showArrow={false}
-                header={
-                  <SectionHeader
-                    title="Kustomizations"
-                    isExpanded={expandedSections.indexOf('kustomizations') !== -1}
-                    onExpand={() => expandSection('kustomizations')}
-                    onCollapse={() => collapseSection('kustomizations')}
-                    isSelected={!isSectionExpanded('kustomizations') && kustomizations.some(k => k.isSelected)}
-                    isHighlighted={!isSectionExpanded('kustomizations') && kustomizations.some(k => k.isHighlighted)}
-                  />
-                }
-              >
-                <KustomizationsSection kustomizations={kustomizations} />
-              </StyledCollapsePanel>
-            )}
-          </StyledCollapse>
-        )}
+      <div style={{height: `calc(100% - ${titleHeight}px)`}} ref={navPaneContentRef}>
+        <NavigatorPaneContainer
+          style={{
+            height: `calc(100% - 1px)`,
+          }}
+        >
+          {uiState.isFolderLoading ? (
+            <StyledSkeleton active />
+          ) : (
+            <StyledCollapse collapsible="disabled" ghost activeKey={expandedSections}>
+              {!isInClusterMode && !previewLoader.isLoading && Object.values(helmCharts).length > 0 && (
+                <StyledCollapsePanel
+                  key="helmcharts"
+                  showArrow={false}
+                  header={
+                    <SectionHeader
+                      title="Helm Charts"
+                      isExpanded={expandedSections.indexOf('helmcharts') !== -1}
+                      onExpand={() => expandSection('helmcharts')}
+                      onCollapse={() => collapseSection('helmcharts')}
+                      isSelected={
+                        !isSectionExpanded('helmcharts') &&
+                        Object.values(helmCharts).some(h =>
+                          h.valueFileIds
+                            .map(v => helmValues[v])
+                            .some((valuesFile: HelmValuesFile) => valuesFile.isSelected)
+                        )
+                      }
+                    />
+                  }
+                >
+                  <HelmChartsSection helmCharts={helmCharts} />
+                </StyledCollapsePanel>
+              )}
+              {!isInClusterMode && !previewLoader.isLoading && kustomizations.length > 0 && (
+                <StyledCollapsePanel
+                  key="kustomizations"
+                  showArrow={false}
+                  header={
+                    <SectionHeader
+                      title="Kustomizations"
+                      isExpanded={expandedSections.indexOf('kustomizations') !== -1}
+                      onExpand={() => expandSection('kustomizations')}
+                      onCollapse={() => collapseSection('kustomizations')}
+                      isSelected={!isSectionExpanded('kustomizations') && kustomizations.some(k => k.isSelected)}
+                      isHighlighted={!isSectionExpanded('kustomizations') && kustomizations.some(k => k.isHighlighted)}
+                    />
+                  }
+                >
+                  <KustomizationsSection navigatorHeight={navigatorHeight} kustomizations={kustomizations} />
+                </StyledCollapsePanel>
+              )}
+            </StyledCollapse>
+          )}
 
-        {uiState.isFolderLoading || previewLoader.isLoading ? <StyledSkeleton /> : <ResourcesSection />}
-      </NavigatorPaneContainer>
+          {uiState.isFolderLoading || previewLoader.isLoading ? (
+            <StyledSkeleton />
+          ) : (
+            <ResourcesSection navigatorHeight={navigatorHeight} />
+          )}
+        </NavigatorPaneContainer>
+      </div>
     </>
   );
 };

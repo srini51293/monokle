@@ -5,9 +5,9 @@ import {Button, Space, Tooltip} from 'antd';
 import {ClusterOutlined, FolderOpenOutlined, ApartmentOutlined, CodeOutlined} from '@ant-design/icons';
 import Colors, {BackgroundColors} from '@styles/Colors';
 import {AppBorders} from '@styles/Borders';
-import {Row, Col, Content, SplitView} from '@atoms';
+import {Row, Col, Content} from '@atoms';
+import {LogViewer, GraphView, SplitView} from '@molecules';
 import {ActionsPane, NavigatorPane, FileTreePane} from '@organisms';
-import {LogViewer, GraphView} from '@molecules';
 import featureJson from '@src/feature-flags.json';
 import ClustersPane from '@organisms/ClustersPane';
 import {ClusterExplorerTooltip, FileExplorerTooltip} from '@constants/tooltips';
@@ -83,7 +83,7 @@ const PaneManager = () => {
   const {windowSize} = useContext(AppContext);
 
   const contentWidth = windowSize.width - (featureJson.ShowRightMenu ? 2 : 1) * iconMenuWidth;
-  const contentHeight = `${windowSize.height - 75}px`;
+  const contentHeight = windowSize.height - 75;
 
   const leftMenuSelection = useAppSelector(state => state.ui.leftMenu.selection);
   const leftActive = useAppSelector(state => state.ui.leftMenu.isActive);
@@ -153,6 +153,7 @@ const PaneManager = () => {
         <StyledColumnPanes style={{width: contentWidth}}>
           <SplitView
             contentWidth={contentWidth}
+            contentHeight={contentHeight}
             left={
               <>
                 <div style={{display: leftMenuSelection === 'file-explorer' ? 'inline' : 'none'}}>
@@ -170,14 +171,14 @@ const PaneManager = () => {
             }
             hideLeft={!leftActive}
             nav={<NavigatorPane />}
-            editor={<ActionsPane contentHeight={contentHeight} />}
+            editor={<ActionsPane contentHeight={`${contentHeight}px`} />}
             right={
               <>
                 {featureJson.ShowGraphView && rightMenuSelection === 'graph' ? (
-                  <GraphView editorHeight={contentHeight} />
+                  <GraphView editorHeight={`${contentHeight}px`} />
                 ) : undefined}
                 <div style={{display: rightMenuSelection === 'logs' ? 'inline' : 'none'}}>
-                  <LogViewer editorHeight={contentHeight} />
+                  <LogViewer editorHeight={`${contentHeight}px`} />
                 </div>
               </>
             }

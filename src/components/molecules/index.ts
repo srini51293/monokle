@@ -8,3 +8,4 @@ export {default as NavigatorKustomizationRow} from './NavigatorKustomizationRow'
 export {default as NavigatorResourceRow} from './NavigatorResourceRow';
 export {default as NavigatorRowLabel} from './NavigatorRowLabel';
 export {default as ScrollIntoView} from './ScrollIntoView';
+export {default as SplitView} from './SplitView';

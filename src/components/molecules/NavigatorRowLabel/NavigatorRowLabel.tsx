@@ -1,11 +1,6 @@
-import React, {useState, useEffect, useContext, useCallback} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {Popover, Typography, Divider} from 'antd';
 import styled from 'styled-components';
-import Colors, {FontColors} from '@styles/Colors';
-import MonoIcon, {MonoIconTypes} from '@components/atoms/MonoIcon';
-
-import AppContext from '@src/AppContext';
-import {NAVIGATOR_HEIGHT_OFFSET} from '@constants/constants';
 
 import {useAppDispatch, useAppSelector} from '@redux/hooks';
 import {selectK8sResource} from '@redux/reducers/main';
@@ -13,6 +8,8 @@ import {ResourceRef, K8sResource} from '@models/k8sresource';
 import {ResourceMapType} from '@models/appstate';
 import {isOutgoingRef, isIncomingRef, isUnsatisfiedRef} from '@redux/services/resourceRefs';
 import ScrollIntoView from '@molecules/ScrollIntoView';
+import Colors, {FontColors} from '@styles/Colors';
+import MonoIcon, {MonoIconTypes} from '@components/atoms/MonoIcon';
 
 const {Text} = Typography;
 
@@ -22,6 +19,7 @@ type RefLinkProps = {
 };
 
 type NavigatorRowLabelProps = {
+  navigatorHeight: number | undefined;
   label: string;
   resourceId: string;
   isSelected: boolean;
@@ -165,6 +163,7 @@ const PopoverContent = (props: {
 
 const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
   const {
+    navigatorHeight,
     label,
     isSelected,
     isHighlighted,
@@ -180,11 +179,8 @@ const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
   const selectedResourceId = useAppSelector(state => state.main.selectedResourceId);
   const selectedPath = useAppSelector(state => state.main.selectedPath);
   const [resource, setResource] = useState<K8sResource>();
-  const scrollContainer = React.useRef(null);
+  const scrollContainerRef = React.useRef(null);
   const labelRef = React.useRef<HTMLSpanElement>(null);
-
-  const {windowSize} = useContext(AppContext);
-  const navigatorHeight = windowSize.height - NAVIGATOR_HEIGHT_OFFSET;
 
   const isScrolledIntoView = useCallback(() => {
     const boundingClientRect = labelRef.current?.getBoundingClientRect();
@@ -193,7 +189,7 @@ const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
     }
     const elementTop = boundingClientRect.top;
     const elementBottom = boundingClientRect.bottom;
-    return elementTop < navigatorHeight && elementBottom >= 0;
+    return navigatorHeight && elementTop < navigatorHeight && elementBottom >= 0;
   }, [navigatorHeight]);
 
   useEffect(() => {
@@ -204,7 +200,7 @@ const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
     const isVisible = isScrolledIntoView();
     if (isHighlighted && selectedPath && !isVisible) {
       // @ts-ignore
-      scrollContainer.current?.scrollIntoView();
+      scrollContainerRef.current?.scrollIntoView();
     }
   }, [isHighlighted, selectedPath]);
 
@@ -213,7 +209,7 @@ const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
     const isVisible = isScrolledIntoView();
     if (isSelected && selectedResourceId && !isVisible) {
       // @ts-ignore
-      scrollContainer.current?.scrollIntoView();
+      scrollContainerRef.current?.scrollIntoView();
     }
   }, []);
 
@@ -221,7 +217,7 @@ const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
     const isVisible = isScrolledIntoView();
     if (isSelected && selectedResourceId && !isVisible) {
       // @ts-ignore
-      scrollContainer.current?.scrollIntoView();
+      scrollContainerRef.current?.scrollIntoView();
     }
   }, [isSelected, selectedResourceId]);
 
@@ -256,7 +252,7 @@ const NavigatorRowLabel = (props: NavigatorRowLabelProps) => {
         onClick={onClickLabel}
         style={!hasIncomingRefs ? {marginLeft: 19} : {}}
       >
-        <ScrollIntoView ref={scrollContainer}>
+        <ScrollIntoView ref={scrollContainerRef}>
           <span ref={labelRef}>{label}</span>
         </ScrollIntoView>
       </StyledSpan>

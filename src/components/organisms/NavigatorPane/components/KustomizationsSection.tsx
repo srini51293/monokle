@@ -8,11 +8,12 @@ import {startPreview, stopPreview} from '@redux/services/preview';
 import {selectK8sResource} from '@redux/reducers/main';
 
 type KustomizationsSectionProps = {
+  navigatorHeight: number | undefined;
   kustomizations: K8sResource[];
 };
 
 const KustomizationsSection = (props: KustomizationsSectionProps) => {
-  const {kustomizations} = props;
+  const {navigatorHeight, kustomizations} = props;
   const dispatch = useAppDispatch();
 
   const previewLoader = useAppSelector(state => state.main.previewLoader);
@@ -44,6 +45,7 @@ const KustomizationsSection = (props: KustomizationsSectionProps) => {
 
         return (
           <NavigatorKustomizationRow
+            navigatorHeight={navigatorHeight}
             key={k.id}
             rowKey={k.id}
             resource={k}

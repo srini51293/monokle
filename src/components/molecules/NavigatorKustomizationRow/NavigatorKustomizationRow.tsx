@@ -13,6 +13,7 @@ import {TOOLTIP_DELAY} from '@constants/constants';
 const PreviewLoadingIcon = <LoadingOutlined style={{fontSize: 16}} spin />;
 
 export type NavigatorKustomizationRowProps = {
+  navigatorHeight: number | undefined;
   rowKey: React.Key;
   resource: K8sResource;
   isSelected: boolean;
@@ -84,6 +85,7 @@ const StyledDiv = styled.div`
 
 const NavigatorKustomizationRow = (props: NavigatorKustomizationRowProps) => {
   const {
+    navigatorHeight,
     rowKey,
     resource,
     isSelected,
@@ -112,6 +114,7 @@ const NavigatorKustomizationRow = (props: NavigatorKustomizationRowProps) => {
           <SectionCol sm={22}>
             <div className={classname}>
               <NavigatorRowLabel
+                navigatorHeight={navigatorHeight}
                 isSelected={isSelected}
                 isHighlighted={highlighted}
                 label={resource.name}

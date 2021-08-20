@@ -7,6 +7,7 @@ import Colors, {FontColors} from '@styles/Colors';
 import NavigatorRowLabel from '@molecules/NavigatorRowLabel';
 
 export type NavigatorResourceRowProps = {
+  navigatorHeight: number | undefined;
   rowKey: React.Key;
   label: string;
   isSelected: boolean;
@@ -63,6 +64,7 @@ const StyledDiv = styled.div`
 
 const NavigatorResourceRow = (props: NavigatorResourceRowProps) => {
   const {
+    navigatorHeight,
     rowKey,
     label,
     isSelected,
@@ -85,6 +87,7 @@ const NavigatorResourceRow = (props: NavigatorResourceRowProps) => {
           <SectionCol sm={22}>
             <div className={classname}>
               <NavigatorRowLabel
+                navigatorHeight={navigatorHeight}
                 label={label}
                 isSelected={isSelected}
                 isHighlighted={highlighted}

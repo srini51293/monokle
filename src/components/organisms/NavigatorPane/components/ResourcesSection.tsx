@@ -1,6 +1,5 @@
 import React, {useState, useEffect} from 'react';
 import micromatch from 'micromatch';
-
 import {useSelector} from 'react-redux';
 
 import {useAppDispatch, useAppSelector} from '@redux/hooks';
@@ -10,17 +9,15 @@ import {NavigatorSection, NavigatorSubSection} from '@models/navigator';
 import {activeResourcesSelector} from '@redux/selectors';
 import {selectK8sResource} from '@redux/reducers/main';
 import {getNamespaces} from '@redux/services/resource';
-
 import NavigatorContentTitle from './NavigatorContentTitle';
-
 import NamespacesSection from './NamespacesSection';
 import SectionRow from './SectionRow';
 import SectionCol from './SectionCol';
 import Section from './Section';
-
 import {ALL_NAMESPACES} from '../constants';
 
-const ResourcesSection = () => {
+const ResourcesSection = (props: {navigatorHeight: number | undefined}) => {
+  const {navigatorHeight} = props;
   const dispatch = useAppDispatch();
   const appConfig = useAppSelector(state => state.config);
   const resourceMap = useAppSelector(state => state.main.resourceMap);
@@ -164,6 +161,7 @@ const ResourcesSection = () => {
                             </SectionRow>
                           )}
                           <Section
+                            navigatorHeight={navigatorHeight}
                             expandedSubsections={expandedSubsectionsBySection[section.name]}
                             onSubsectionExpand={handleSubsectionExpand}
                             onSubsectionCollapse={handleSubsectionCollapse}
