@@ -74,7 +74,7 @@ ipcMain.on(DOWNLOAD_PLUGIN, async (event, pluginUrl: string) => {
 
 ipcMain.on('run-kustomize', (event, folder: string) => {
   try {
-    let stdout = execSync('kubectl kustomize ./', {
+    let stdout = execSync(`kubectl kustomize .${path.sep}`, {
       cwd: folder,
       env: {
         NODE_ENV: PROCESS_ENV.NODE_ENV,
