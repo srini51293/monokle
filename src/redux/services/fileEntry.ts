@@ -50,7 +50,7 @@ function isHelmChartFolder(files: string[]) {
  * Processes the specified folder as containing a Helm Chart
  */
 
-function processHelmChartFolder(
+async function processHelmChartFolder(
   folder: string,
   rootFolder: string,
   files: string[],
@@ -80,15 +80,9 @@ function processHelmChartFolder(
       if (depth === appConfig.folderReadsMaxDepth) {
         log.warn(`[readFiles]: Ignored ${filePath} because max depth was reached.`);
       } else {
-        fileEntry.children = readFiles(
-          filePath,
-          appConfig,
-          resourceMap,
-          fileMap,
-          helmChartMap,
-          helmValuesMap,
-          depth + 1
-        );
+        readFiles(filePath, appConfig, resourceMap, fileMap, helmChartMap, helmValuesMap, depth + 1).then(children => {
+          fileEntry.children = children;
+        });
       }
     } else if (micromatch.isMatch(file, '*values*.yaml')) {
       const helmValues: HelmValuesFile = {
@@ -117,7 +111,7 @@ function processHelmChartFolder(
  * Returns the list of filenames (not paths) found in the specified folder
  */
 
-export function readFiles(
+export async function readFiles(
   folder: string,
   appConfig: AppConfig,
   resourceMap: ResourceMapType,
@@ -126,7 +120,7 @@ export function readFiles(
   helmValuesMap: HelmValuesMapType,
   depth: number = 1
 ) {
-  const files = fs.readdirSync(folder);
+  const files = await fs.promises.readdir(folder);
   const result: string[] = [];
 
   // if there is no root entry assume this is the root folder (questionable..)
@@ -162,21 +156,18 @@ export function readFiles(
         if (depth === appConfig.folderReadsMaxDepth) {
           log.warn(`[readFiles]: Ignored ${filePath} because max depth was reached.`);
         } else {
-          fileEntry.children = readFiles(
-            filePath,
-            appConfig,
-            resourceMap,
-            fileMap,
-            helmChartMap,
-            helmValuesMap,
-            depth + 1
-          );
+          readFiles(filePath, appConfig, resourceMap, fileMap, helmChartMap, helmValuesMap, depth + 1).then(ch => {
+            fileEntry.children = ch;
+          });
         }
       } else if (appConfig.fileIncludes.some(e => micromatch.isMatch(fileEntry.name, e))) {
         try {
-          extractK8sResourcesFromFile(filePath, fileMap).forEach(resource => {
-            resourceMap[resource.id] = resource;
-          });
+          const resources = extractK8sResourcesFromFile(filePath, fileMap);
+          resources.then(r =>
+            r.forEach(resource => {
+              resourceMap[resource.id] = resource;
+            })
+          );
         } catch (e) {
           log.warn(`Failed to parse yaml in file ${fileEntry.name}; ${e}`);
         }
@@ -246,8 +237,8 @@ export function getAbsoluteValuesFilePath(helmValuesFile: HelmValuesFile, fileMa
  * Extracts all resources from the file at the specified path
  */
 
-export function extractK8sResourcesFromFile(filePath: string, fileMap: FileMapType): K8sResource[] {
-  const fileContent = fs.readFileSync(filePath, 'utf8');
+export async function extractK8sResourcesFromFile(filePath: string, fileMap: FileMapType) {
+  const fileContent = await fs.promises.readFile(filePath, {encoding: 'utf8'});
   const rootEntry = fileMap[ROOT_FILE_ENTRY];
   return extractK8sResources(fileContent, rootEntry ? filePath.substr(rootEntry.filePath.length) : filePath);
 }
@@ -296,7 +287,7 @@ export function getFileEntryForAbsolutePath(filePath: string, fileMap: FileMapTy
  * Updates the fileEntry from the specified path - and its associated resources
  */
 
-export function reloadFile(absolutePath: string, fileEntry: FileEntry, state: AppState) {
+export async function reloadFile(absolutePath: string, fileEntry: FileEntry, state: AppState) {
   let absolutePathTimestamp: number | undefined;
   try {
     absolutePathTimestamp = fs.statSync(absolutePath).mtime.getTime();
@@ -324,7 +315,7 @@ export function reloadFile(absolutePath: string, fileEntry: FileEntry, state: Ap
       clearResourceSelections(state.resourceMap);
     }
 
-    const resourcesFromFile = extractK8sResourcesFromFile(absolutePath, state.fileMap);
+    const resourcesFromFile = await extractK8sResourcesFromFile(absolutePath, state.fileMap);
     resourcesFromFile.forEach(resource => {
       state.resourceMap[resource.id] = resource;
     });
@@ -346,11 +337,11 @@ export function reloadFile(absolutePath: string, fileEntry: FileEntry, state: Ap
  * Adds the file at the specified path with the specified parent
  */
 
-function addFile(absolutePath: string, state: AppState) {
+async function addFile(absolutePath: string, state: AppState) {
   log.info(`adding file ${absolutePath}`);
   let rootFolder = state.fileMap[ROOT_FILE_ENTRY].filePath;
   const fileEntry = createFileEntry(absolutePath.substr(rootFolder.length));
-  const resourcesFromFile = extractK8sResourcesFromFile(absolutePath, state.fileMap);
+  const resourcesFromFile = await extractK8sResourcesFromFile(absolutePath, state.fileMap);
   resourcesFromFile.forEach(resource => {
     state.resourceMap[resource.id] = resource;
   });
@@ -368,12 +359,12 @@ function addFile(absolutePath: string, state: AppState) {
  * Adds the folder at the specified path with the specified parent
  */
 
-function addFolder(absolutePath: string, state: AppState, appConfig: AppConfig) {
+async function addFolder(absolutePath: string, state: AppState, appConfig: AppConfig) {
   log.info(`adding folder ${absolutePath}`);
   const rootFolder = state.fileMap[ROOT_FILE_ENTRY].filePath;
   if (absolutePath.startsWith(rootFolder)) {
     const folderEntry = createFileEntry(absolutePath.substr(rootFolder.length));
-    folderEntry.children = readFiles(
+    folderEntry.children = await readFiles(
       absolutePath,
       appConfig,
       state.resourceMap,
@@ -391,7 +382,7 @@ function addFolder(absolutePath: string, state: AppState, appConfig: AppConfig) 
  * Adds the file/folder at specified path - and its contained resources
  */
 
-export function addPath(absolutePath: string, state: AppState, appConfig: AppConfig) {
+export async function addPath(absolutePath: string, state: AppState, appConfig: AppConfig) {
   const parentPath = absolutePath.substr(0, absolutePath.lastIndexOf(path.sep));
   const parentEntry = getFileEntryForAbsolutePath(parentPath, state.fileMap);
 
@@ -405,7 +396,9 @@ export function addPath(absolutePath: string, state: AppState, appConfig: AppCon
       }
       return undefined;
     }
-    const fileEntry = isDirectory ? addFolder(absolutePath, state, appConfig) : addFile(absolutePath, state);
+    const fileEntry = isDirectory
+      ? await addFolder(absolutePath, state, appConfig)
+      : await addFile(absolutePath, state);
 
     if (fileEntry) {
       state.fileMap[fileEntry.filePath] = fileEntry;
