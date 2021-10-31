@@ -12,6 +12,13 @@ module.exports = {
       return webpackConfig;
     },
   },
+  jest: {
+    configure: {
+      globals: {
+        CONFIG: true,
+      },
+    },
+  },
   plugins: [
     {
       plugin: CracoAlias,
