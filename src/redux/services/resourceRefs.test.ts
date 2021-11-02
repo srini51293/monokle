@@ -1,7 +1,7 @@
 import {getTestResourcePath} from '@redux/services/__test__/utils';
-import {readManifests} from '@redux/services/fileEntry.test';
 import {isUnsatisfiedRef, processRefs} from '@redux/services/resourceRefs';
 import {ResourceMapType} from '@models/appstate';
+import {readManifests} from '@redux/services/fileEntry';
 
 test('array-optional-resource-refs', () => {
   const {resourceMap, fileMap, files, helmChartMap, helmValuesMap} = readManifests(

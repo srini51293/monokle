@@ -1,6 +1,6 @@
 import {getTestResourcePath} from '@redux/services/__test__/utils';
-import {readManifests} from '@redux/services/fileEntry.test';
 import {processKustomizations} from '@redux/services/kustomize';
+import {readManifests} from '@redux/services/fileEntry';
 
 test('multiple-patches', () => {
   const {resourceMap, fileMap} = readManifests(getTestResourcePath('manifests/kustomizationWithMultiplePatches'));

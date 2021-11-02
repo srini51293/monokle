@@ -1,10 +1,7 @@
-import {AppConfig} from '@models/appconfig';
-import initialState from '@redux/initialState';
-import {FileMapType, HelmChartMapType, HelmValuesMapType, ResourceMapType} from '@models/appstate';
 import {getK8sResources} from '@redux/services/resource';
 import {createSafePath, getTestResourcePath} from '@redux/services/__test__/utils';
 import {KUSTOMIZATION_KIND} from '@constants/constants';
-import {createFileEntry, getResourcesForPath, readFiles} from './fileEntry';
+import {createFileEntry, getResourcesForPath, readManifests} from './fileEntry';
 
 test('create-file-entry', () => {
   let e = createFileEntry(createSafePath('/a/very/long/path'));
@@ -13,17 +10,6 @@ test('create-file-entry', () => {
   expect(e.filePath).toBe(createSafePath('/a/very/long/path'));
   expect(e.children).toBeUndefined();
 });
-
-export function readManifests(rootFolder: string) {
-  const appConfig: AppConfig = initialState.config;
-  const resourceMap: ResourceMapType = {};
-  const fileMap: FileMapType = {};
-  const helmChartMap: HelmChartMapType = {};
-  const helmValuesMap: HelmValuesMapType = {};
-
-  const files = readFiles(rootFolder, appConfig, resourceMap, fileMap, helmChartMap, helmValuesMap);
-  return {resourceMap, fileMap, files, helmChartMap, helmValuesMap};
-}
 
 test('read-files', () => {
   const {resourceMap, fileMap, files} = readManifests(getTestResourcePath('manifests/argo-rollouts'));

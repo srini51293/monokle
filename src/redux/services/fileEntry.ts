@@ -11,6 +11,7 @@ import {clearResourceSelections, updateSelectionAndHighlights} from '@redux/serv
 import {HelmChart, HelmValuesFile} from '@models/helm';
 import {v4 as uuidv4} from 'uuid';
 import {getFileStats} from '@utils/files';
+import initialState from '@redux/initialState';
 import {extractK8sResources, reprocessResources} from './resource';
 
 type PathRemovalSideEffect = {
@@ -492,4 +493,19 @@ export function removePath(absolutePath: string, state: AppState, fileEntry: Fil
   reprocessResources([], state.resourceMap, state.fileMap, state.resourceRefsProcessingOptions, {
     resourceKinds: removalSideEffect.removedResources.map(r => r.kind),
   });
+}
+
+/**
+ * Utility function to read all manifests in the specified folder - without postprocessing
+ */
+
+export function readManifests(rootFolder: string) {
+  const appConfig: AppConfig = initialState.config;
+  const resourceMap: ResourceMapType = {};
+  const fileMap: FileMapType = {};
+  const helmChartMap: HelmChartMapType = {};
+  const helmValuesMap: HelmValuesMapType = {};
+
+  const files = readFiles(rootFolder, appConfig, resourceMap, fileMap, helmChartMap, helmValuesMap);
+  return {resourceMap, fileMap, files, helmChartMap, helmValuesMap};
 }
