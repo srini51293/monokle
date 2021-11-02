@@ -11,6 +11,11 @@ test('create-file-entry', () => {
   expect(e.children).toBeUndefined();
 });
 
+test('profile-files', () => {
+  const {resourceMap, fileMap, files} = readManifests(getTestResourcePath('manifests/argo-cd'));
+  expect(Object.values(fileMap).length).toBe(107);
+});
+
 test('read-files', () => {
   const {resourceMap, fileMap, files} = readManifests(getTestResourcePath('manifests/argo-rollouts'));
 
