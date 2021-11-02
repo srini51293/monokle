@@ -13,7 +13,7 @@ test('create-file-entry', () => {
 
 test('profile-files', () => {
   const {resourceMap, fileMap, files} = readManifests(getTestResourcePath('manifests/argo-cd'));
-  expect(Object.values(fileMap).length).toBe(107);
+  expect(Object.values(fileMap).length).toBe(106);
 });
 
 test('read-files', () => {
