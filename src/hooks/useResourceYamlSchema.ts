@@ -13,7 +13,7 @@ function useResourceYamlSchema(yaml: any, resourceMap: ResourceMapType, resource
     if (resourceId) {
       const resource = resourceMap[resourceId];
       if (resource) {
-        resourceSchema = getResourceSchema(resource);
+        resourceSchema = getResourceSchema(resource.kind);
         validate = !isKustomizationPatch(resource);
       }
     }

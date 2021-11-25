@@ -19,7 +19,7 @@ export function validateResource(resource: K8sResource) {
     return;
   }
 
-  const resourceSchema = getResourceSchema(resource);
+  const resourceSchema = getResourceSchema(resource.kind);
   if (!resourceSchema) {
     return;
   }

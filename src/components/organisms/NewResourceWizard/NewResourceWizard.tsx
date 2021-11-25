@@ -4,10 +4,13 @@ import {Form, Input, Modal, Select} from 'antd';
 
 import {InfoCircleOutlined} from '@ant-design/icons';
 
+import jsf from 'json-schema-faker';
+
 import {K8sResource} from '@models/k8sresource';
 
 import {useAppDispatch, useAppSelector} from '@redux/hooks';
 import {closeNewResourceWizard} from '@redux/reducers/ui';
+import {getResourceSchema} from '@redux/services/schema';
 import {createUnsavedResource} from '@redux/services/unsavedResource';
 
 import {NO_NAMESPACE, useNamespaces} from '@hooks/useNamespaces';
@@ -107,7 +110,11 @@ const NewResourceWizard = () => {
       data.selectedResourceId && data.selectedResourceId !== SELECT_OPTION_NONE
         ? resourceMap[data.selectedResourceId]
         : undefined;
-    const jsonTemplate = selectedResource?.content;
+
+    const schema = getResourceSchema(data.kind);
+    jsf.option('failOnInvalidTypes', false);
+    jsf.option('failOnInvalidFormat', false);
+    const jsonTemplate = selectedResource ? selectedResource.content : schema ? jsf.generate(schema) : {};
 
     createUnsavedResource(
       {

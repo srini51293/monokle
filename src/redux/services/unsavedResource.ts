@@ -31,8 +31,10 @@ export function createUnsavedResource(
   let newResourceContent: any;
 
   if (jsonTemplate) {
+    delete jsonTemplate.metadata?.name;
+    delete jsonTemplate.metadata?.namespace;
+
     newResourceContent = {
-      ...jsonTemplate,
       apiVersion: input.apiVersion,
       kind: input.kind,
       metadata: {
@@ -41,11 +43,17 @@ export function createUnsavedResource(
         namespace: input.namespace,
       },
     };
-    newResourceText = stringify(newResourceContent);
+
+    delete jsonTemplate.apiVersion;
+    delete jsonTemplate.kind;
+    delete jsonTemplate.metadata;
+
+    newResourceText = `${stringify(newResourceContent)}${stringify(jsonTemplate)}`;
   } else {
     newResourceText = createDefaultResourceText(input);
-    newResourceContent = parseDocument(newResourceText).toJS();
   }
+
+  newResourceContent = parseDocument(newResourceText).toJS();
 
   const newResource: K8sResource = {
     name: input.name,

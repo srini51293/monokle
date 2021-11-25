@@ -1,9 +1,8 @@
 import log from 'loglevel';
 
-import {K8sResource} from '@models/k8sresource';
+import {KUSTOMIZATION_KIND} from '@constants/constants';
 
 import {loadResource} from '@redux/services';
-import {isKustomizationResource} from '@redux/services/kustomize';
 
 import {getResourceKindHandler} from '@src/kindhandlers';
 
@@ -14,16 +13,16 @@ const schemaCache = new Map<string, any>();
 /**
  * Returns a JSON Schema for the specified resource kind
  */
-export function getResourceSchema(resource: K8sResource) {
-  if (isKustomizationResource(resource)) {
+export function getResourceSchema(resourceKind: string) {
+  if (resourceKind === KUSTOMIZATION_KIND) {
     return kustomizeSchema;
   }
 
-  const resourceKindHandler = getResourceKindHandler(resource.kind);
+  const resourceKindHandler = getResourceKindHandler(resourceKind);
   const prefix = resourceKindHandler?.validationSchemaPrefix;
 
   if (prefix) {
-    const schemaKey = `${prefix}.${resource.kind}`;
+    const schemaKey = `${prefix}.${resourceKind}`;
     if (!schemaCache.has(schemaKey)) {
       const kindSchema = k8sSchema['definitions'][schemaKey];
       if (kindSchema) {
@@ -46,6 +45,6 @@ export function getResourceSchema(resource: K8sResource) {
     }
   }
 
-  log.warn(`Failed to find schema for resource of kind ${resource.kind}`);
+  log.warn(`Failed to find schema for resource of kind ${resourceKind}`);
   return undefined;
 }
