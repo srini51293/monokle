@@ -86,6 +86,7 @@ const schema = {
             },
             lastOpened: {
               type: 'string',
+              default: new Date(-8640000000000000).toISOString(),
             },
           },
         },
