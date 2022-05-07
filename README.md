@@ -108,3 +108,7 @@ Don't hesitate to provide any feedback you might have to help us prioritize and 
 
 - Share ideas, suggestions, bug-reports or complaints on our [Discord server](https://discord.gg/uNuhy6GDyn).
 - Read about how to contribute [in our Documentation](https://kubeshop.github.io/monokle/contributing).
+
+## Docs
+
+* [`APPIMAGE`](./APPIMAGE).
