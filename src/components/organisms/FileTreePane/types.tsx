@@ -10,6 +10,7 @@ export interface ProcessingEntity {
 export interface TreeItemProps {
   title: React.ReactNode;
   treeKey: string;
+  parentKey?: string;
   setProcessingEntity: Dispatch<SetStateAction<ProcessingEntity>>;
   processingEntity: ProcessingEntity;
   onDuplicate: (absolutePath: string, entityName: string, dirName: string) => void;
@@ -26,14 +27,18 @@ export interface TreeItemProps {
   isFolder?: Boolean;
 }
 
+export interface MatchLine {
+  key: string;
+  parentKey?: string;
+  title: React.ReactNode;
+}
+
 export interface TreeNode {
   key: string;
   title: React.ReactNode;
   children: TreeNode[];
   highlight: boolean;
   isFolder?: boolean;
-  matchCount?: number;
-  matches?: RegExpMatchArray | null;
   text?: string;
   /**
    * Whether the TreeNode has children
@@ -42,4 +47,10 @@ export interface TreeNode {
   icon?: React.ReactNode;
   isExcluded?: boolean;
   isSupported?: boolean;
+}
+
+export interface FilterTreeNode extends Omit<TreeNode, 'children'> {
+  children: MatchLine[];
+  matchCount?: number;
+  matches?: RegExpMatchArray | null;
 }
