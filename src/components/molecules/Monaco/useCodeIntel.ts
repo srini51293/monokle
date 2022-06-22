@@ -39,7 +39,7 @@ interface CodeIntelProps {
   selectedPath?: string;
   helmChartMap?: HelmChartMapType;
   helmValuesMap?: HelmValuesMapType;
-  matchOptions?: {currentMatchItem: MatchNode; matchLines: []};
+  matchOptions?: {currentMatchItem: MatchNode; matchLines: [][]} | null;
 }
 
 function useCodeIntel(props: CodeIntelProps) {
@@ -88,7 +88,9 @@ function useCodeIntel(props: CodeIntelProps) {
       selectedResource,
       matchOptions,
     };
+
     const codeIntelForFile = codeIntels.find(ci => ci.shouldApply(shouldApplyParams));
+
     if (codeIntelForFile) {
       codeIntelForFile
         .codeIntel({
@@ -153,7 +155,7 @@ function useCodeIntel(props: CodeIntelProps) {
       clearCodeIntel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code, isEditorMounted, selectedResource, resourceMap, editor, imagesList]);
+  }, [code, isEditorMounted, selectedResource, resourceMap, editor, imagesList, matchOptions]);
 
   useEffect(() => {
     if (completionDisposableRef.current && completionDisposableRef.current.dispose) {
