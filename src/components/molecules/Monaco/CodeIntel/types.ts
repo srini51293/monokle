@@ -9,7 +9,7 @@ export interface CodeIntelResponse {
   newDecorations: monaco.editor.IModelDeltaDecoration[];
   newDisposables: monaco.IDisposable[];
   newMarkers?: monaco.editor.IMarkerData[];
-  currentSelection?: MatchNode;
+  currentSelection?: MatchNode | null;
 }
 
 export interface ShouldApplyCodeIntelParams {

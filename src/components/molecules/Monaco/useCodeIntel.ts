@@ -15,6 +15,7 @@ import {CurrentMatch} from '@models/fileentry';
 import {K8sResource, ResourceRef} from '@models/k8sresource';
 
 import {useAppDispatch} from '@redux/hooks';
+import {highlightFileMatches} from '@redux/reducers/main';
 import {setMonacoEditor} from '@redux/reducers/ui';
 
 import {codeIntels} from '@molecules/Monaco/CodeIntel/index';
@@ -120,7 +121,7 @@ function useCodeIntel(props: CodeIntelProps) {
           if (!data) {
             return;
           }
-          const {newDecorations, newDisposables, newMarkers, currentSelection} = data;
+          const {newDecorations, newDisposables, newMarkers} = data;
 
           if (newDecorations) {
             idsOfDecorationsRef.current = setDecorations(editor, newDecorations);
@@ -134,10 +135,28 @@ function useCodeIntel(props: CodeIntelProps) {
             setMarkers(model, newMarkers);
           }
 
-          if (currentSelection) {
-            editor.setPosition({lineNumber: currentSelection.lineNumber, column: 1});
-            editor.revealLine(currentSelection.lineNumber);
+          if (matchOptions?.replaceWith) {
+            // console.log('matchOptions', matchOptions);
+            const obj = matchOptions.matchesInFile[matchOptions.currentMatchIdx];
+            const newMatchesInFile = matchOptions.matchesInFile.filter(
+              (item, idx) => idx !== matchOptions.currentMatchIdx
+            );
+
+            const range = new monaco.Range(obj.lineNumber, obj.start, obj.lineNumber, obj.end);
+
+            editor.executeEdits('', [{range, text: matchOptions?.replaceWith}]);
+
+            if (newMatchesInFile.length) {
+              dispatch(highlightFileMatches({matchesInFile: newMatchesInFile, currentMatchIdx: 0}));
+            } else {
+              dispatch(highlightFileMatches(null));
+            }
           }
+
+          // if (currentSelection) {
+          //   editor.setPosition({lineNumber: currentSelection.lineNumber, column: 1});
+          //   editor.revealLine(currentSelection.lineNumber);
+          // }
         });
     }
   };

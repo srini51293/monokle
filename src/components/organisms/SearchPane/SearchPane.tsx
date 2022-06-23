@@ -37,6 +37,10 @@ type Props = {
 const SearchPane: React.FC<Props> = ({height}) => {
   const [searchTree, setSearchTree] = useState<FilterTreeNode[]>([]);
   const [currentMatch, setCurrentMatch] = useState<CurrentMatch | null>(null);
+  const matchOptions = useAppSelector(state => state.main.matchOptions);
+  console.log('currentMatch', currentMatch);
+  console.log('matchOptions', matchOptions);
+
   const [isFindingMatches, setFindingMatches] = useState<boolean>(false);
   const [searchQuery, updateSearchQuery] = useState<string>('');
   const [replaceQuery, updateReplaceQuery] = useState<string>('');
@@ -214,6 +218,8 @@ const SearchPane: React.FC<Props> = ({height}) => {
   };
 
   const handleStep = (step: number) => {
+    console.log('currentMatch', currentMatch);
+
     if (currentMatch) {
       // eslint-disable-next-line no-unsafe-optional-chaining
       const nextIdx = currentMatch?.currentMatchIdx + step; // more matches in this file exists
@@ -224,6 +230,11 @@ const SearchPane: React.FC<Props> = ({height}) => {
         dispatch(selectFile({filePath: searchTree[nextFileIdx].key}));
       }
     }
+  };
+
+  const replaceCurrentSelection = () => {
+    if (replaceQuery === searchQuery) return;
+    setCurrentMatch((prev: any) => ({...prev, replaceWith: replaceQuery}));
   };
 
   const isReady = searchTree.length && !isFindingMatches;
@@ -255,7 +266,7 @@ const SearchPane: React.FC<Props> = ({height}) => {
               </S.SearchBox>
             </S.Form>
             <S.RootFolderText>
-              {isReady && (
+              {Boolean(isReady) && (
                 <S.MatchText id="search-count">
                   <p>
                     {searchCounter.current.totalMatchCount} matches in {searchCounter.current.filesCount} files
@@ -355,6 +366,14 @@ const SearchPane: React.FC<Props> = ({height}) => {
                     </Button>
                   </S.ButtonContainer>
                 </S.ResultContainer>
+              )}
+              {replaceQuery && (
+                <S.ButtonContainer>
+                  <Button type="primary" onClick={replaceCurrentSelection}>
+                    Replace Selected
+                  </Button>
+                  <Button type="primary">Replace All</Button>
+                </S.ButtonContainer>
               )}
             </S.RootFolderText>
             {isFindingMatches && <S.Skeleton active />}
