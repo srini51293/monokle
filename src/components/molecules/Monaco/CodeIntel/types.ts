@@ -1,7 +1,7 @@
 import {monaco} from 'react-monaco-editor';
 
 import {FileMapType, HelmChartMapType, HelmValuesMapType, ResourceFilterType, ResourceMapType} from '@models/appstate';
-import {FileEntry, MatchNode} from '@models/fileentry';
+import {CurrentMatch, FileEntry, MatchNode} from '@models/fileentry';
 import {K8sResource, ResourceRef} from '@models/k8sresource';
 import {MonacoUiState} from '@models/ui';
 
@@ -16,7 +16,7 @@ export interface ShouldApplyCodeIntelParams {
   selectedResource?: K8sResource;
   currentFile?: FileEntry;
   helmValuesMap?: HelmValuesMapType;
-  matchOptions?: {currentMatchItem: MatchNode; matchLines: [][]} | null;
+  matchOptions?: CurrentMatch | null;
 }
 
 export interface CodeIntelParams {
@@ -35,7 +35,7 @@ export interface CodeIntelParams {
   selectImageHandler: (imageId: string) => void;
   resourceMap: ResourceMapType;
   model: monaco.editor.IModel | null;
-  matchOptions?: {currentMatchItem: MatchNode; matchLines: [][]} | null;
+  matchOptions?: CurrentMatch | null;
 }
 
 export interface CodeIntelApply {

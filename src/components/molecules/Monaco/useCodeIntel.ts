@@ -11,7 +11,7 @@ import {
   ResourceFilterType,
   ResourceMapType,
 } from '@models/appstate';
-import {MatchNode} from '@models/fileentry';
+import {CurrentMatch} from '@models/fileentry';
 import {K8sResource, ResourceRef} from '@models/k8sresource';
 
 import {useAppDispatch} from '@redux/hooks';
@@ -39,7 +39,7 @@ interface CodeIntelProps {
   selectedPath?: string;
   helmChartMap?: HelmChartMapType;
   helmValuesMap?: HelmValuesMapType;
-  matchOptions?: {currentMatchItem: MatchNode; matchLines: [][]} | null;
+  matchOptions?: CurrentMatch | null;
 }
 
 function useCodeIntel(props: CodeIntelProps) {
