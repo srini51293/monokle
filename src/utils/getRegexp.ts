@@ -45,7 +45,7 @@ function decorateMatch(text: string, query: string, fromIndex = 0): Props {
   return {textWithHighlights, indexStart: fromIndex + queryIdx, indexEnd: fromIndex + queryIdx + query.length};
 }
 
-function getMatchLines(text: string, queryRegExp: RegExp) {
+function getMatchLines(text: string, queryRegExp: RegExp, searchCounterRef: any) {
   const lineArr = text.split('\n');
 
   const fileLineData = lineArr
@@ -53,12 +53,13 @@ function getMatchLines(text: string, queryRegExp: RegExp) {
       const matchesInLine = line.match(queryRegExp);
       if (!matchesInLine) return null;
 
-      return matchesInLine?.reduce((acc: any, currQuery) => {
+      return matchesInLine?.reduce((acc: any, currQuery, matchIdx) => {
         const {textWithHighlights, indexStart, indexEnd} = decorateMatch(
           line,
           currQuery,
           (acc.length && acc[acc.length - 1].end) || 0
         );
+        searchCounterRef.current.totalMatchCount += matchIdx + 1;
         return [
           ...acc,
           {
@@ -66,6 +67,7 @@ function getMatchLines(text: string, queryRegExp: RegExp) {
             lineNumber: index + 1,
             start: indexStart + 1,
             end: indexEnd + 1,
+            currentMatchNumber: searchCounterRef.current.totalMatchCount,
           },
         ];
       }, []);
@@ -80,11 +82,11 @@ export const filterFilesByQuery = (node: FileEntry, queryRegExp: RegExp, searchC
     const matches = node.text.match(queryRegExp);
     const matchCount = matches?.length;
     if (matchCount) {
-      const matchLines = getMatchLines(node.text, queryRegExp);
+      const matchLines = getMatchLines(node.text, queryRegExp, searchCounterRef);
 
       searchCounterRef.current = {
+        ...searchCounterRef.current,
         filesCount: searchCounterRef.current.filesCount + 1,
-        totalMatchCount: searchCounterRef.current.totalMatchCount + matchCount,
       };
 
       return {

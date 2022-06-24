@@ -230,7 +230,16 @@ const SearchPane: React.FC<Props> = ({height}) => {
     setCurrentMatch({...currentMatch, replaceWith: replaceQuery});
   };
 
+  const replaceAll = () => {
+    // if (replaceQuery === searchQuery) return;
+    // TODO: replace in all files
+  };
+
   const isReady = searchTree.length && !isFindingMatches;
+  const currentMatchNode = currentMatch?.matchesInFile[currentMatch.currentMatchIdx];
+
+  const isNextEnabled = Number(currentMatchNode?.currentMatchNumber) < searchCounter.current.totalMatchCount;
+  const isPrevEnabled = Number(currentMatchNode?.currentMatchNumber) > 1;
 
   return (
     <S.FileTreeContainer id="AdvancedSearch">
@@ -347,14 +356,16 @@ const SearchPane: React.FC<Props> = ({height}) => {
               {isReady && (
                 <S.ResultContainer>
                   <S.MatchText id="search-count-replace">
-                    <p>1 of {searchCounter.current.totalMatchCount}</p>
+                    <p>
+                      {currentMatchNode?.currentMatchNumber} of {searchCounter.current.totalMatchCount}
+                    </p>
                     <span> View in Editor</span>
                   </S.MatchText>
                   <S.ButtonContainer>
-                    <Button type="primary" onClick={() => handleStep(-1)}>
+                    <Button type="primary" onClick={() => handleStep(-1)} disabled={!isPrevEnabled}>
                       Previous
                     </Button>
-                    <Button type="primary" onClick={() => handleStep(1)}>
+                    <Button type="primary" onClick={() => handleStep(1)} disabled={!isNextEnabled}>
                       Next
                     </Button>
                   </S.ButtonContainer>
@@ -365,7 +376,9 @@ const SearchPane: React.FC<Props> = ({height}) => {
                   <Button type="primary" onClick={replaceCurrentSelection}>
                     Replace Selected
                   </Button>
-                  <Button type="primary">Replace All</Button>
+                  <Button type="primary" onClick={replaceAll}>
+                    Replace All
+                  </Button>
                 </S.ButtonContainer>
               )}
             </S.RootFolderText>
