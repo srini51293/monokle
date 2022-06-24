@@ -99,16 +99,16 @@ export function createRootFileEntry(rootFolder: string, fileMap: FileMapType) {
  * Checks if the specified filename should be excluded per the project exclusion config
  */
 
-export function fileIsExcluded(fileEntry: FileEntry, projectConfig: ProjectConfig) {
-  return projectConfig.scanExcludes?.some(e => micromatch.isMatch(fileEntry.filePath, e));
+export function fileIsExcluded(filePath: FileEntry['filePath'], projectConfig: ProjectConfig) {
+  return projectConfig.scanExcludes?.some(e => micromatch.isMatch(filePath, e));
 }
 
 /**
  * Checks if the specified filename should be excluded per the project inclusion config
  */
 
-export function fileIsIncluded(fileEntry: FileEntry, projectConfig: ProjectConfig) {
-  return projectConfig.fileIncludes?.some(e => micromatch.isMatch(path.basename(fileEntry.filePath), e));
+export function fileIsIncluded(filePath: FileEntry['filePath'], projectConfig: ProjectConfig) {
+  return projectConfig.fileIncludes?.some(e => micromatch.isMatch(path.basename(filePath), e));
 }
 
 /**
@@ -195,8 +195,10 @@ export function readFiles(
       const fileEntryPath = filePath.substring(rootFolder.length);
 
       const isDir = getFileStats(filePath)?.isDirectory();
+      const isExcluded = fileIsExcluded(fileEntryPath, projectConfig);
+      const isIncluded = fileIsIncluded(fileEntryPath, projectConfig);
 
-      if (!isDir) {
+      if (isIncluded && (!isDir || !isExcluded)) {
         text = fs.readFileSync(path.join(filePath), 'utf8');
       }
 
@@ -205,7 +207,7 @@ export function readFiles(
       if (helmChart && isHelmTemplateFile(fileEntry.filePath)) {
         createHelmFile(fileEntry, helmChart, fileMap);
       }
-      if (fileIsExcluded(fileEntry, projectConfig)) {
+      if (isExcluded) {
         fileEntry.isExcluded = true;
       } else if (isDir) {
         const folderReadsMaxDepth = projectConfig.folderReadsMaxDepth;
@@ -230,7 +232,7 @@ export function readFiles(
           helmValuesMap,
           fileMap,
         });
-      } else if (fileIsIncluded(fileEntry, projectConfig)) {
+      } else if (fileIsIncluded(fileEntry.filePath, projectConfig)) {
         extractResourcesForFileEntry(fileEntry, fileMap, resourceMap);
       }
 
@@ -371,8 +373,8 @@ export function getFileEntryForAbsolutePath(filePath: string, fileMap: FileMapTy
 function shouldReloadResourcesFromFile(fileEntry: FileEntry, projectConfig: ProjectConfig) {
   return (
     !isHelmValuesFile(fileEntry.filePath) &&
-    !fileIsExcluded(fileEntry, projectConfig) &&
-    fileIsIncluded(fileEntry, projectConfig)
+    !fileIsExcluded(fileEntry.filePath, projectConfig) &&
+    fileIsIncluded(fileEntry.filePath, projectConfig)
   );
 }
 
@@ -561,7 +563,7 @@ function addFile(absolutePath: string, state: AppState, projectConfig: ProjectCo
   const relativePath = absolutePath.substring(rootFolderEntry.filePath.length);
   const fileEntry = createFileEntry({fileEntryPath: relativePath, fileMap: state.fileMap});
 
-  if (!fileIsIncluded(fileEntry, projectConfig)) {
+  if (!fileIsIncluded(fileEntry.filePath, projectConfig)) {
     return fileEntry;
   }
 

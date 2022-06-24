@@ -6,9 +6,11 @@ export type MatchParamProps = {
   regExp: boolean;
 };
 
+/* based on matching params we change the way we find matches in file */
 export function getRegexp(query: string, params: MatchParamProps): RegExp {
   let matchParams = 'gi'; // global, case insensitive by default
   if (params.matchCase) {
+    // @param matchCase: respect the casing if true
     matchParams = 'g';
   }
   if (!params.regExp) {
@@ -18,9 +20,11 @@ export function getRegexp(query: string, params: MatchParamProps): RegExp {
   let queryRegExp = new RegExp(query, matchParams);
 
   if (params.matchWholeWord) {
+    // @param matchWholeWord: find a match only if it is a standalone word, not a substring
     queryRegExp = new RegExp(`\\b${query}\\b`, matchParams);
   }
   if (params.regExp) {
+    // if the query is a regular expression
     queryRegExp = new RegExp(query, matchParams);
   }
 
@@ -96,7 +100,6 @@ export const filterFilesByQuery = (node: FileEntry, queryRegExp: RegExp, searchC
         matchLines,
       };
     }
-
     return null as unknown as FileEntry;
   }
 

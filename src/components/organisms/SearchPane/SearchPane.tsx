@@ -13,7 +13,7 @@ import {CurrentMatch, FileEntry, MatchNode} from '@models/fileentry';
 
 import {useAppDispatch, useAppSelector} from '@redux/hooks';
 import {highlightFileMatches, selectFile, setSelectingFile, updateResourceFilter} from '@redux/reducers/main';
-import {openRenameEntityModal, setExpandedSearchedFiles, openCreateFileFolderModal} from '@redux/reducers/ui';
+import {openCreateFileFolderModal, openRenameEntityModal, setExpandedSearchedFiles} from '@redux/reducers/ui';
 import {isInPreviewModeSelector} from '@redux/selectors';
 
 import {TitleBar} from '@molecules';
@@ -24,7 +24,7 @@ import electronStore from '@utils/electronStore';
 import {MatchParamProps, filterFilesByQuery, getRegexp} from '@utils/getRegexp';
 
 import TreeItem from '../FileTreePane/TreeItem';
-import {FilterTreeNode} from '../FileTreePane/types';
+import {FilterTreeNode, TreeNode} from '../FileTreePane/types';
 import {createFilteredNode} from './CreateFilteredNode';
 import RecentSearch from './RecentSearch';
 
@@ -32,6 +32,19 @@ import * as S from './styled';
 
 type Props = {
   height: number;
+};
+
+const decorate = (arr: FilterTreeNode[]) => {
+  return {
+    key: 'filter',
+    isExcluded: true,
+    isSupported: true,
+    isLeaf: false,
+    title: <></>,
+    highlight: false,
+    isFolder: true,
+    children: arr,
+  } as TreeNode;
 };
 
 const SearchPane: React.FC<Props> = ({height}) => {
@@ -69,7 +82,7 @@ const SearchPane: React.FC<Props> = ({height}) => {
   const expandedFiles = useAppSelector(state => state.ui.leftMenu.expandedSearchedFiles);
   const {TabPane} = Tabs;
 
-  const highlightFilePath = useHighlightNode(searchTree, treeRef, expandedFiles);
+  const highlightFilePath = useHighlightNode(decorate(searchTree), treeRef, expandedFiles);
 
   const onCreateFileFolder = (absolutePath: string, type: 'file' | 'folder') => {
     dispatch(openCreateFileFolderModal({rootDir: absolutePath, type}));
@@ -135,19 +148,6 @@ const SearchPane: React.FC<Props> = ({height}) => {
     if (!recentSearch.includes(query)) {
       electronStore.set('appConfig.recentSearch', [...recentSearch, query]);
     }
-  };
-
-  const decorate = (arr: any) => {
-    return {
-      key: 'filter',
-      isExcluded: true,
-      isSupported: true,
-      isLeaf: false,
-      title: <></>,
-      highlight: false,
-      isFolder: true,
-      children: arr,
-    };
   };
 
   const findMatches = (query: string) => {
