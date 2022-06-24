@@ -136,13 +136,17 @@ function useCodeIntel(props: CodeIntelProps) {
           }
 
           if (matchOptions?.replaceWith) {
-            // console.log('matchOptions', matchOptions);
-            const obj = matchOptions.matchesInFile[matchOptions.currentMatchIdx];
+            const currentMatch = matchOptions.matchesInFile[matchOptions.currentMatchIdx];
             const newMatchesInFile = matchOptions.matchesInFile.filter(
-              (item, idx) => idx !== matchOptions.currentMatchIdx
+              (_, idx) => idx !== matchOptions.currentMatchIdx
             );
 
-            const range = new monaco.Range(obj.lineNumber, obj.start, obj.lineNumber, obj.end);
+            const range = new monaco.Range(
+              currentMatch.lineNumber,
+              currentMatch.start,
+              currentMatch.lineNumber,
+              currentMatch.end
+            );
 
             editor.executeEdits('', [{range, text: matchOptions?.replaceWith}]);
 
@@ -153,10 +157,11 @@ function useCodeIntel(props: CodeIntelProps) {
             }
           }
 
-          // if (currentSelection) {
-          //   editor.setPosition({lineNumber: currentSelection.lineNumber, column: 1});
-          //   editor.revealLine(currentSelection.lineNumber);
-          // }
+          if (matchOptions?.matchesInFile) {
+            const currentMatch = matchOptions.matchesInFile[matchOptions.currentMatchIdx];
+            editor.setPosition({lineNumber: currentMatch.lineNumber, column: 1});
+            editor.revealLine(currentMatch.lineNumber);
+          }
         });
     }
   };

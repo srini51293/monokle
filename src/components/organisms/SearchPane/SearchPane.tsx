@@ -36,11 +36,7 @@ type Props = {
 
 const SearchPane: React.FC<Props> = ({height}) => {
   const [searchTree, setSearchTree] = useState<FilterTreeNode[]>([]);
-  const [currentMatch, setCurrentMatch] = useState<CurrentMatch | null>(null);
-  const matchOptions = useAppSelector(state => state.main.matchOptions);
-  console.log('currentMatch', currentMatch);
-  console.log('matchOptions', matchOptions);
-
+  const currentMatch = useAppSelector(state => state.main.matchOptions);
   const [isFindingMatches, setFindingMatches] = useState<boolean>(false);
   const [searchQuery, updateSearchQuery] = useState<string>('');
   const [replaceQuery, updateReplaceQuery] = useState<string>('');
@@ -95,9 +91,9 @@ const SearchPane: React.FC<Props> = ({height}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedResourceId, searchTree, selectedPath]);
 
-  useEffect(() => {
-    dispatch(highlightFileMatches(currentMatch));
-  }, [currentMatch, dispatch]);
+  const setCurrentMatch = (options: any) => {
+    dispatch(highlightFileMatches(options));
+  };
 
   const onRename = (absolutePathToEntity: string, osPlatform: string) => {
     dispatch(openRenameEntityModal({absolutePathToEntity, osPlatform}));
@@ -218,23 +214,20 @@ const SearchPane: React.FC<Props> = ({height}) => {
   };
 
   const handleStep = (step: number) => {
-    console.log('currentMatch', currentMatch);
-
     if (currentMatch) {
       // eslint-disable-next-line no-unsafe-optional-chaining
       const nextIdx = currentMatch?.currentMatchIdx + step; // more matches in this file exists
       if (currentMatch?.matchesInFile[nextIdx]) {
-        setCurrentMatch((prevState: any) => ({...prevState, currentMatchIdx: nextIdx}));
-      } else {
-        const nextFileIdx = searchTree.findIndex(node => node.filePath === selectedPath) + step;
-        dispatch(selectFile({filePath: searchTree[nextFileIdx].key}));
+        return setCurrentMatch({...currentMatch, currentMatchIdx: nextIdx});
       }
     }
+    const nextFileIdx = searchTree.findIndex(node => node.filePath === selectedPath) + step;
+    dispatch(selectFile({filePath: searchTree[nextFileIdx].key}));
   };
 
   const replaceCurrentSelection = () => {
     if (replaceQuery === searchQuery) return;
-    setCurrentMatch((prev: any) => ({...prev, replaceWith: replaceQuery}));
+    setCurrentMatch({...currentMatch, replaceWith: replaceQuery});
   };
 
   const isReady = searchTree.length && !isFindingMatches;
