@@ -1,9 +1,9 @@
 import React, {Key, useEffect, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 
-import {Button, Input, Tabs} from 'antd';
+import {Button, Input, Modal, Tabs} from 'antd';
 
-import {DownOutlined} from '@ant-design/icons';
+import {DownOutlined, ExclamationCircleOutlined} from '@ant-design/icons';
 
 import {flatten} from 'lodash';
 
@@ -231,8 +231,19 @@ const SearchPane: React.FC<Props> = ({height}) => {
   };
 
   const replaceAll = () => {
-    // if (replaceQuery === searchQuery) return;
-    // TODO: replace in all files
+    if (replaceQuery === searchQuery) return;
+    const title = `Are you sure you want to replace all matches?`;
+
+    Modal.confirm({
+      title,
+      icon: <ExclamationCircleOutlined />,
+      onOk() {
+        // TODO: replace all matches
+      },
+      onCancel() {
+        () => {};
+      },
+    });
   };
 
   const isReady = searchTree.length && !isFindingMatches;
